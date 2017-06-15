@@ -18,6 +18,7 @@ PROCEDURE warning(strong varchar2, msg varchar2);
 PROCEDURE two_column(col1 varchar2, col2 varchar2);
 PROCEDURE form_option(value varchar2, label varchar2, selected varchar2);
 PROCEDURE button_group (postfix1 varchar2, label1 varchar2, postfix2 varchar2, label2 varchar2);
+PROCEDURE delete_form (id_v number, section varchar2, column_name varchar2, table_name varchar2);
 END ADAM_GUI;
 /
 SET SERVEROUTPUT ON;
@@ -144,5 +145,20 @@ PROCEDURE button_group (postfix1 varchar2, label1 varchar2, postfix2 varchar2, l
 </div>');
 END button_group;
 
+PROCEDURE delete_form (id_v number, section varchar2, column_name varchar2, table_name varchar2) IS 
+label varchar2(2000);
+BEGIN
+    ADAM_GUI.header(section);
+    BEGIN
+        EXECUTE IMMEDIATE 'SELECT ' || column_name || ' FROM ' || table_name || ' WHERE id = :id' INTO label USING id_v ;
+        ADAM_GUI.warning('Uwaga!', 'Czy usunac "' || label || '"?');
+        ADAM_GUI.button_group(section || '.delete_sql?id_v=' || id_v, 'Usuń',
+                              section || '.detail?id_v=' || id_v, 'Anuluj');
+        EXCEPTION
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+    END;
+    ADAM_GUI.footer;
+END delete_form;
 END ADAM_GUI;
 /
