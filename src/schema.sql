@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2017-05-26 09:03:09.983
+-- Last modification date: 2017-06-15 19:05:15.779
 
 -- tables
 -- Table: address
@@ -11,6 +11,7 @@ CREATE TABLE address (
     street varchar2(250)  NOT NULL,
     street_number varchar2(10)  NOT NULL,
     taxpayer_id varchar2(15)  NOT NULL,
+    user_id integer  NOT NULL,
     CONSTRAINT address_pk PRIMARY KEY (id)
 ) ;
 
@@ -80,9 +81,10 @@ CREATE TABLE payment_form (
 -- Table: sessions
 CREATE TABLE sessions (
     id integer  NOT NULL,
-    name varchar2(64)  NOT NULL,
+    key varchar2(100)  NOT NULL,
     user_id integer  NOT NULL,
-    last_used timestamp  NOT NULL,
+    last_used date  NOT NULL,
+    CONSTRAINT session_key_1 UNIQUE (key),
     CONSTRAINT sessions_pk PRIMARY KEY (id)
 ) ;
 
@@ -108,11 +110,16 @@ CREATE TABLE "user" (
     password varchar2(64)  NOT NULL,
     email varchar2(100)  NOT NULL,
     address_id integer  NOT NULL,
-    payment_id integer  NOT NULL,
+    admin integer  NOT NULL,
     CONSTRAINT user_pk PRIMARY KEY (id)
 ) ;
 
 -- foreign keys
+-- Reference: address_user (table: address)
+ALTER TABLE address ADD CONSTRAINT address_user
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id);
+
 -- Reference: guest_order (table: guest)
 ALTER TABLE guest ADD CONSTRAINT guest_order
     FOREIGN KEY (order_id)
@@ -158,23 +165,5 @@ ALTER TABLE "user" ADD CONSTRAINT user_address
     FOREIGN KEY (address_id)
     REFERENCES address (id);
 
--- Reference: user_payment (table: user)
-ALTER TABLE "user" ADD CONSTRAINT user_payment
-    FOREIGN KEY (payment_id)
-    REFERENCES payment (id);
-
 -- End of file.
 
-REATE SEQUENCE dept_seq START WITH 1;
-
-Trigger definition:
-
-CREATE OR REPLACE TRIGGER dept_bir 
-BEFORE INSERT ON departments 
-FOR EACH ROW
-
-BEGIN
-  SELECT dept_seq.NEXTVAL
-  INTO   :new.id
-  FROM   dual;
-END;
