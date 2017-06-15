@@ -11,7 +11,7 @@ PROCEDURE update_form (id_v number);
 PROCEDURE update_sql (id_v number, name_v varchar2, country_id_v number);
 PROCEDURE delete_form(id_v number);
 PROCEDURE delete_sql(id_v number);
-PROCEDURE form_select(id varchar2, label varchar2, name varchar2);
+PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected number);
 
 END ADAM_LOCATION;
 /
@@ -41,13 +41,21 @@ PROCEDURE detail(id_v number) IS
         SELECT * INTO location_v FROM location WHERE id=id_v;
         SELECT * INTO country_v FROM country WHERE id=location_v.country_id;
         SELECT COUNT(id) INTO trip_count FROM trip WHERE location_id=id_v;
-        ADAM_GUI.button_group('ADAM_COUNTRY.update_form?id_v=' || id_v, 'Aktualizuj',
-                              'ADAM_COUNTRY.delete_form?id_v=' || id_v, 'Usuń');
+        ADAM_GUI.button_group('ADAM_LOCATION.update_form?id_v=' || id_v, 'Aktualizuj',
+                              'ADAM_LOCATION.delete_form?id_v=' || id_v, 'Usuń');
         htp.print('<h1>' || location_v.name || '</h2>');
         htp.tableOpen('class="table"');
-        ADAM_GUI.two_column('Kraj', '<a href="' || ADAM_GUI.url('ADAM_COUNTRY.detail?id_v=' || location_v.country_id ) || '">' || country_v.name || '</a>');
+        ADAM_GUI.two_column('Kraj', '<a href="' || ADAM_GUI.url('ADAM_LOCATION.detail?id_v=' || location_v.country_id ) || '">' || country_v.name || '</a>');
         ADAM_GUI.two_column('Liczba wycieczek', trip_count);
         htp.tableClose;
+        IF trip_count > 0 THEN
+            htp.print('<h2>Wycieczki do lokalizacji</h2>');
+            htp.print('<ul  class="nav flex-column">');
+            FOR dane IN (SELECT * FROM trip WHERE location_id = id_v) LOOP
+                htp.print('<li  class="nav-item"><a  class="nav-link" href="' || ADAM_GUI.url('ADAM_TRIP.detail?id_v=' || dane.id ) || '">' || dane.name || '</a></li>');
+            END LOOP;
+            htp.print('</ul>');
+        END IF; 
     END;
     ADAM_GUI.footer;
 END detail; 
@@ -140,14 +148,14 @@ PROCEDURE update_sql (id_v number, name_v varchar2, country_id_v number) IS BEGI
     ADAM_GUI.footer;
 END update_sql;
 
-PROCEDURE form_select(id varchar2, label varchar2, name varchar2) IS
+PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected number) IS
   BEGIN
   htp.print('<div class="form-group">
     <label for="' || id || '">' || label || '</label>
     <select name="' || name || '" class="form-control" id="' || id || '">');
   FOR dane IN (SELECT location.id, location.name AS name, continent, country.name AS country_name 
                FROM location INNER JOIN country ON location.country_id = country.id) LOOP
-      htp.print('<option value=' || dane.id || '>' || dane.name ||' (' || dane.country_name || ')</option>');
+      ADAM_GUI.form_option(dane.id, dane.name ||' (' || dane.country_name || ')',  selected);
   END LOOP;
   htp.print('</select>
   </div>');
@@ -155,19 +163,8 @@ PROCEDURE form_select(id varchar2, label varchar2, name varchar2) IS
 END form_select;
 
 PROCEDURE delete_form(id_v number) IS 
-    location_name location.name%TYPE;
 BEGIN 
-    ADAM_GUI.header('ADAM_LOCATION');
-    BEGIN
-        SELECT name INTO location_name FROM location WHERE id = id_v;
-        ADAM_GUI.warning('Uwaga!', 'Czy usunac "' || location_name || '"?');
-        ADAM_GUI.button_group('ADAM_LOCATION.delete_sql?id_v=' || id_v, 'Usuń',
-                              'ADAM_LOCATION.detail?id_v=' || id_v, 'Anuluj');
-        EXCEPTION
-            when NO_DATA_FOUND then
-                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
-    END;
-    ADAM_GUI.footer;
+    ADAM_GUI.delete_form(id_v, 'ADAM_LOCATION', 'name', 'location');
 END delete_form;
 
 PROCEDURE delete_sql(id_v number) IS 

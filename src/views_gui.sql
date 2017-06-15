@@ -16,9 +16,11 @@ PROCEDURE success(strong varchar2, msg varchar2);
 PROCEDURE danger(strong varchar2, msg varchar2);
 PROCEDURE warning(strong varchar2, msg varchar2);
 PROCEDURE two_column(col1 varchar2, col2 varchar2);
+PROCEDURE two_column(col1 varchar2, col2 varchar2, class varchar2);
 PROCEDURE form_option(value varchar2, label varchar2, selected varchar2);
 PROCEDURE button_group (postfix1 varchar2, label1 varchar2, postfix2 varchar2, label2 varchar2);
 PROCEDURE delete_form (id_v number, section varchar2, column_name varchar2, table_name varchar2);
+PROCEDURE form_checkbox(id varchar2, label varchar2, name varchar2, value varchar2, selected number);
 END ADAM_GUI;
 /
 SET SERVEROUTPUT ON;
@@ -31,7 +33,7 @@ PROCEDURE header(active varchar2) IS BEGIN
     htp.title('Biuro podróży');
     htp.print('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">');
     htp.print('<link rel="stylesheet" href="http://v4-alpha.getbootstrap.com/examples/narrow-jumbotron/narrow-jumbotron.css">');
-    htp.print('<style>.container { max-width: 80rem; } </style>');
+    htp.print('<style>.container { max-width: 90rem; } .card-img-top { max-width: 100%; } </style>');
     htp.headClose;
     htp.bodyOpen;
     ADAM_GUI.top_menu(active);
@@ -59,13 +61,13 @@ PROCEDURE top_menu(active varchar2) IS BEGIN
     htp.print('<div class="header clearfix">
         <nav>
           <ul class="nav nav-pills float-right">');
-    ADAM_GUI.nav_link('ADAM_TRIP', 'home', 'Wycieczki', active);
+    ADAM_GUI.nav_link('ADAM_COUNTRY', 'home', 'Kraje', active);
     ADAM_GUI.nav_link('ADAM_LOCATION', 'home', 'Lokalizacje', active);
-    ADAM_GUI.nav_link('ADAM_GUEST', 'home', 'Goście', active);
+    ADAM_GUI.nav_link('ADAM_TRIP', 'home', 'Wycieczki', active);
     ADAM_GUI.nav_link('ADAM_ORDER', 'home', 'Zamówienia', active);
+    ADAM_GUI.nav_link('ADAM_GUEST', 'home', 'Goście', active);
     ADAM_GUI.nav_link('ADAM_PAYMENT_FORM', 'home', 'Formy płatności', active);
     ADAM_GUI.nav_link('ADAM_PAYMENT', 'home', 'Płatności', active);
-    ADAM_GUI.nav_link('ADAM_COUNTRY', 'home', 'Kraje', active);
     htp.print('</ul>
         </nav>
         <h3 class="text-muted">Biuro podróży</h3>
@@ -126,8 +128,17 @@ PROCEDURE warning(strong varchar2, msg varchar2) IS BEGIN
   <strong>' || strong || '</strong> ' || msg || '</div>');
 END warning;
 
+PROCEDURE two_column(col1 varchar2, col2 varchar2, class varchar2) IS BEGIN
+    htp.print('<tr');
+    -- TODO: Fix condition
+    -- IF class <> '' THEN
+        htp.print(' class="' || class || '"');
+    -- END IF;
+    htp.print('><td>' || col1 || '</td><td>' || col2 || '</td></tr>');
+END two_column;
+
 PROCEDURE two_column(col1 varchar2, col2 varchar2) IS BEGIN
-    htp.print('<tr><td>' || col1 || '</td><td>' || col2 || '</td></tr>');
+    ADAM_GUI.two_column(col1, col2, '');
 END two_column;
 
 PROCEDURE form_option(value varchar2, label varchar2, selected varchar2) IS BEGIN
@@ -160,5 +171,16 @@ BEGIN
     END;
     ADAM_GUI.footer;
 END delete_form;
+
+PROCEDURE form_checkbox(id varchar2, label varchar2, name varchar2, value varchar2, selected number) IS
+BEGIN
+    htp.print('<div class="form-check">
+    <label class="form-check-label">
+      <input type="checkbox" name="'|| name ||'" value="'|| value ||'"class="form-check-input">
+      ' || label || '
+    </label>
+  </div>');
+END form_checkbox;
+
 END ADAM_GUI;
 /

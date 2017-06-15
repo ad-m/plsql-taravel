@@ -164,19 +164,8 @@ PROCEDURE update_sql (id_v number, name_v varchar2, continent_v number) IS BEGIN
 END update_sql;
 
 PROCEDURE delete_form(id_v number) IS 
-    country_name country.name%TYPE;
 BEGIN 
-    ADAM_GUI.header('ADAM_COUNTRY');
-    BEGIN
-        SELECT name INTO country_name FROM country WHERE id = id_v;
-        ADAM_GUI.warning('Uwaga!', 'Czy usunac "' || country_name || '"?');
-        ADAM_GUI.button_group('ADAM_COUNTRY.delete_sql?id_v=' || id_v, 'Usuń',
-                              'ADAM_COUNTRY.detail?id_v=' || id_v, 'Anuluj');
-        EXCEPTION
-            when NO_DATA_FOUND then
-                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
-    END;
-    ADAM_GUI.footer;
+    ADAM_GUI.delete_form(id_v, 'ADAM_COUNTRY', 'name', 'country');
 END delete_form;
 
 PROCEDURE delete_sql(id_v number) IS 
