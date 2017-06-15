@@ -14,8 +14,10 @@ PROCEDURE form_textarea_clean(id varchar2, label varchar2, name varchar2);
 PROCEDURE form_submit(label varchar2);
 PROCEDURE success(strong varchar2, msg varchar2);
 PROCEDURE danger(strong varchar2, msg varchar2);
+PROCEDURE warning(strong varchar2, msg varchar2);
 PROCEDURE two_column(col1 varchar2, col2 varchar2);
 PROCEDURE form_option(value varchar2, label varchar2, selected varchar2);
+PROCEDURE button_group (postfix1 varchar2, label1 varchar2, postfix2 varchar2, label2 varchar2);
 END ADAM_GUI;
 /
 SET SERVEROUTPUT ON;
@@ -118,12 +120,16 @@ PROCEDURE danger(strong varchar2, msg varchar2) IS BEGIN
   <strong>' || strong || '</strong> ' || msg || '</div>');
 END danger;
 
+PROCEDURE warning(strong varchar2, msg varchar2) IS BEGIN
+    htp.print('<div class="alert alert-warning" role="alert">
+  <strong>' || strong || '</strong> ' || msg || '</div>');
+END warning;
+
 PROCEDURE two_column(col1 varchar2, col2 varchar2) IS BEGIN
     htp.print('<tr><td>' || col1 || '</td><td>' || col2 || '</td></tr>');
 END two_column;
 
 PROCEDURE form_option(value varchar2, label varchar2, selected varchar2) IS BEGIN
-
     htp.print('<option value="' || value || '"');
     IF selected = value THEN
         htp.print(' selected="selected"');
@@ -131,5 +137,11 @@ PROCEDURE form_option(value varchar2, label varchar2, selected varchar2) IS BEGI
     htp.print('>' || label || '</option>');
 END form_option;
 
-END ADAM_GUI;
+PROCEDURE button_group (postfix1 varchar2, label1 varchar2, postfix2 varchar2, label2 varchar2) IS BEGIN
+    htp.print('<div class="btn-group" role="group">
+  <a href="'|| ADAM_GUI.url(postfix1) || '" class="btn btn-primary">'   || label1 || '</a>
+  <a href="'|| ADAM_GUI.url(postfix2) || '" class="btn btn-secondary">' || label2 || '</a>
+</div>');
+END button_group;
 
+END ADAM_GUI;
