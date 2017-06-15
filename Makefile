@@ -4,7 +4,7 @@ build/db.sql:
 	@cat src/schema.sql src/initial.sql > build/db.sql;
 
 build/web.sql:
-	@cat src/view_*.sql > build/web.sql;
+	@cat src/views_*.sql > build/web.sql;
 
 build/project.sql: build/db.sql build/web.sql
 	cat build/db.sql build/web.sql > build/project.sql;
@@ -14,3 +14,6 @@ clean:
 
 build: build/project.sql
 
+rebuild: build/project.sql
+	make clean
+	make build

@@ -4,14 +4,14 @@ SHOW ERRORS;
 CREATE OR REPLACE PACKAGE ADAM_COUNTRY AS
 PROCEDURE home;
 PROCEDURE list(page number);
-PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected varchar2);
 PROCEDURE detail(id_v number);
 PROCEDURE create_form;
 PROCEDURE create_sql (name_v varchar2, continent_v number);
 PROCEDURE update_form(id_v number);
 PROCEDURE update_sql (id_v number, name_v varchar2, continent_v number);
+PROCEDURE delete_form(id_v number);
 PROCEDURE delete_sql(id_v number);
-PROCEDURE delete_sql(id_v number);
+PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected varchar2);
 PROCEDURE form_select_continent(id varchar2, label varchar2, name varchar2, selected varchar2);
 END ADAM_COUNTRY;
 /
@@ -43,7 +43,7 @@ PROCEDURE detail(id_v number) IS
                                                  'inne') INTO continent_name FROM country WHERE id=id_v;
         SELECT COUNT(id) INTO location_count FROM location WHERE country_id=id_v;
         ADAM_GUI.button_group('ADAM_COUNTRY.update_form?id_v=' || id_v, 'Aktualizuj',
-                              'ADAM_COUNTRY.delete_sql?id_v=' || id_v, 'Usuń');
+                              'ADAM_COUNTRY.delete_form?id_v=' || id_v, 'Usuń');
         htp.print('<h1>' || country_v.name || '</h1>');
         htp.tableOpen('class="table"');
         ADAM_GUI.two_column('Kontynent', continent_name);
@@ -163,13 +163,13 @@ PROCEDURE update_sql (id_v number, name_v varchar2, continent_v number) IS BEGIN
     ADAM_GUI.footer;
 END update_sql;
 
-PROCEDURE delete_sql(id_v number) IS 
+PROCEDURE delete_form(id_v number) IS 
     country_name country.name%TYPE;
 BEGIN 
     ADAM_GUI.header('ADAM_COUNTRY');
     BEGIN
         SELECT name INTO country_name FROM country WHERE id = id_v;
-        ADAM_GUI.warning('Uwaga!', 'Czy usunac kraj "' || country_name || '"?');
+        ADAM_GUI.warning('Uwaga!', 'Czy usunac "' || country_name || '"?');
         ADAM_GUI.button_group('ADAM_COUNTRY.delete_sql?id_v=' || id_v, 'Usuń',
                               'ADAM_COUNTRY.detail?id_v=' || id_v, 'Anuluj');
         EXCEPTION
@@ -177,7 +177,7 @@ BEGIN
                 ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
     END;
     ADAM_GUI.footer;
-END delete_sql;
+END delete_form;
 
 PROCEDURE delete_sql(id_v number) IS 
     my_integration_error EXCEPTION;
@@ -193,7 +193,7 @@ BEGIN
         END IF;
         SELECT name INTO country_name FROM country WHERE id = id_v;
         DELETE FROM country WHERE id = id_v;
-        ADAM_GUI.success('Well done!', 'Pomyslnie usunieto kraj ' || country_name || '.');
+        ADAM_GUI.success('Well done!', 'Pomyslnie usunieto "' || country_name || '".');
         EXCEPTION
             when my_integration_error then
                 ADAM_GUI.danger('Oh no!', 'Naruszenie integralności');
@@ -224,4 +224,4 @@ BEGIN
 END form_select_continent;
 
 END ADAM_COUNTRY;
-
+/

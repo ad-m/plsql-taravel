@@ -4,12 +4,15 @@ SHOW ERRORS;
 CREATE OR REPLACE PACKAGE ADAM_LOCATION AS
 PROCEDURE home;
 PROCEDURE list(page number);
-PROCEDURE form_select(id varchar2, label varchar2, name varchar2);
 PROCEDURE detail(id_v number);
 PROCEDURE create_form;
 PROCEDURE create_sql (name_v varchar2, country_id_v number);
 PROCEDURE update_form (id_v number);
 PROCEDURE update_sql (id_v number, name_v varchar2, country_id_v number);
+PROCEDURE delete_form(id_v number);
+PROCEDURE delete_sql(id_v number);
+PROCEDURE form_select(id varchar2, label varchar2, name varchar2);
+
 END ADAM_LOCATION;
 /
 SET SERVEROUTPUT ON;
@@ -39,7 +42,7 @@ PROCEDURE detail(id_v number) IS
         SELECT * INTO country_v FROM country WHERE id=location_v.country_id;
         SELECT COUNT(id) INTO trip_count FROM trip WHERE location_id=id_v;
         ADAM_GUI.button_group('ADAM_COUNTRY.update_form?id_v=' || id_v, 'Aktualizuj',
-                      'ADAM_COUNTRY.delete_location_form?id_v=' || id_v, 'Usuń');
+                              'ADAM_COUNTRY.delete_form?id_v=' || id_v, 'Usuń');
         htp.print('<h1>' || location_v.name || '</h2>');
         htp.tableOpen('class="table"');
         ADAM_GUI.two_column('Kraj', '<a href="' || ADAM_GUI.url('ADAM_COUNTRY.detail?id_v=' || location_v.country_id ) || '">' || country_v.name || '</a>');
@@ -151,6 +154,53 @@ PROCEDURE form_select(id varchar2, label varchar2, name varchar2) IS
   NULL;
 END form_select;
 
+PROCEDURE delete_form(id_v number) IS 
+    location_name location.name%TYPE;
+BEGIN 
+    ADAM_GUI.header('ADAM_LOCATION');
+    BEGIN
+        SELECT name INTO location_name FROM location WHERE id = id_v;
+        ADAM_GUI.warning('Uwaga!', 'Czy usunac "' || location_name || '"?');
+        ADAM_GUI.button_group('ADAM_LOCATION.delete_sql?id_v=' || id_v, 'Usuń',
+                              'ADAM_LOCATION.detail?id_v=' || id_v, 'Anuluj');
+        EXCEPTION
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+    END;
+    ADAM_GUI.footer;
+END delete_form;
+
+PROCEDURE delete_sql(id_v number) IS 
+    my_integration_error EXCEPTION;
+    PRAGMA EXCEPTION_INIT (my_integration_error, -20101);
+    count_trip number;
+    location_name location.name%TYPE;
+BEGIN
+    ADAM_GUI.header('ADAM_LOCATION');
+    BEGIN
+        SELECT COUNT(id) INTO count_trip FROM trip WHERE location_id = id_v;
+        IF count_trip > 0 THEN
+            raise_application_error(-20101, 'Naruszenie integralności');
+        END IF;
+        SELECT name INTO location_name FROM location WHERE id = id_v;
+        DELETE FROM location WHERE id = id_v;
+        ADAM_GUI.success('Well done!', 'Pomyslnie usunieto "' || location_name || '".');
+        EXCEPTION
+            when my_integration_error then
+                ADAM_GUI.danger('Oh no!', 'Naruszenie integralności');
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+            WHEN STORAGE_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad pamieci');
+            when INVALID_NUMBER then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when VALUE_ERROR then
+                ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych');
+            when others then
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
+    END;
+    ADAM_GUI.footer;
+END delete_sql;
 
 END ADAM_LOCATION;
-
+/

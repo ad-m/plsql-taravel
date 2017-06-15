@@ -128,3 +128,4 @@ PROCEDURE delete_sql (id_v number) IS BEGIN NULL; END delete_sql;
 
 
 END ADAM_TRIP;
+/

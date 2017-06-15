@@ -145,3 +145,4 @@ PROCEDURE button_group (postfix1 varchar2, label1 varchar2, postfix2 varchar2, l
 END button_group;
 
 END ADAM_GUI;
+/
