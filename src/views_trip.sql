@@ -198,7 +198,7 @@ PROCEDURE create_sql(base_price_v varchar2,
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
             when null_invalid then
-                ADAM_GUI.danger('Oh no!', 'Wypelnij wszystkie wymagane pola, proszę!' || sqlerrm);
+                ADAM_GUI.danger('Oh no!', 'Wypelnij wszystkie wymagane pola, proszę! Pamiętaj o datach!');
             when others then
                 ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
