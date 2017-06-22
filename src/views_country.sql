@@ -22,7 +22,9 @@ CREATE OR REPLACE PACKAGE BODY ADAM_COUNTRY AS
 PROCEDURE home IS BEGIN ADAM_COUNTRY.list(0); END home; 
 PROCEDURE list(page number) IS BEGIN
     ADAM_GUI.header('ADAM_COUNTRY');
-    ADAM_GUI.button('ADAM_COUNTRY.create_form', 'Dodaj kraj');
+    IF ADAM_USER.is_admin = TRUE THEN
+        ADAM_GUI.button('ADAM_COUNTRY.create_form', 'Dodaj kraj');
+    END IF ;
     htp.print('<ul  class="nav flex-column">');
     FOR dane IN (SELECT * FROM country) LOOP
         htp.print('<li  class="nav-item"><a  class="nav-link" href="' || ADAM_GUI.url('ADAM_COUNTRY.detail?id_v=' || dane.id ) || '">' || dane.name || '</a></li>');
@@ -42,8 +44,10 @@ PROCEDURE detail(id_v number) IS
                                               2, 'Azja',
                                                  'inne') INTO continent_name FROM country WHERE id=id_v;
         SELECT COUNT(id) INTO location_count FROM location WHERE country_id=id_v;
-        ADAM_GUI.button_group('ADAM_COUNTRY.update_form?id_v=' || id_v, 'Aktualizuj',
-                              'ADAM_COUNTRY.delete_form?id_v=' || id_v, 'Usuń');
+        IF ADAM_USER.is_admin = TRUE THEN
+            ADAM_GUI.button_group('ADAM_COUNTRY.update_form?id_v=' || id_v, 'Aktualizuj',
+                                  'ADAM_COUNTRY.delete_form?id_v=' || id_v, 'Usuń');
+        END IF;
         htp.print('<h1>' || country_v.name || '</h1>');
         htp.tableOpen('class="table"');
         ADAM_GUI.two_column('Kontynent', continent_name);

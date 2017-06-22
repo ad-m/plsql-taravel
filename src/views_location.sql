@@ -30,6 +30,8 @@ PROCEDURE list(page number) IS BEGIN
     END LOOP;
     htp.print('</ul>');
     ADAM_GUI.footer;
+    exception when others then
+            ADAM_GUI.danger(SQLCODE, sqlerrm);
 END list; 
 PROCEDURE detail(id_v number) IS 
     location_v location%ROWTYPE;

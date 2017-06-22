@@ -7,7 +7,7 @@ PROCEDURE footer;
 FUNCTION url(postfix varchar2) RETURN VARCHAR2;
 PROCEDURE top_menu(active varchar2);
 PROCEDURE button(prefix varchar2, txt varchar2);
-PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2);
+PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null);
 PROCEDURE form_input_clean(id varchar2, type varchar2, label varchar2, name varchar2);
 PROCEDURE form_textarea(id varchar2, label varchar2, name varchar2, content varchar2);
 PROCEDURE form_textarea_clean(id varchar2, label varchar2, name varchar2);
@@ -60,15 +60,18 @@ PROCEDURE top_menu(active varchar2) IS BEGIN
     htp.print('<div class="container">');
     htp.print('<div class="header clearfix">
         <nav>
-          <ul class="nav nav-pills float-right">');
+          <ul class="nav nav-pills">');
     ADAM_GUI.nav_link('ADAM_COUNTRY', 'home', 'Kraje', active);
     ADAM_GUI.nav_link('ADAM_LOCATION', 'home', 'Lokalizacje', active);
     ADAM_GUI.nav_link('ADAM_TRIP', 'home', 'Wycieczki', active);
     ADAM_GUI.nav_link('ADAM_ORDER', 'home', 'Zamówienia', active);
     ADAM_GUI.nav_link('ADAM_GUEST', 'home', 'Goście', active);
     ADAM_GUI.nav_link('ADAM_PAYMENT_FORM', 'home', 'Formy płatności', active);
+    ADAM_GUI.nav_link('ADAM_ADDRESS', 'home', 'Adresy', active);
     IF ADAM_USER.get_user_id() < 1 THEN
         ADAM_GUI.nav_link('ADAM_USER', 'login_form', 'Logowanie', active);
+    ELSE
+        ADAM_GUI.nav_link('ADAM_USER', 'logout', 'Wyloguj ' || ADAM_USER.get_user_name(), active);
     END IF;
     ADAM_GUI.nav_link('ADAM_PAYMENT', 'home', 'Płatności', active);
     htp.print('</ul>
@@ -91,7 +94,7 @@ PROCEDURE button(prefix varchar2, txt varchar2) IS BEGIN
     htp.print('<a class="btn btn-primary" href="' || ADAM_GUI.url(prefix) || '">' || txt || '</a>');
 END button;
 
-PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2) IS BEGIN
+PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null) IS BEGIN
     htp.print('<div class="form-group">
         <label for="' || id || '">' || label || '</label>
         <input type="' || type || '" name="' || name || '" class="form-control" id="' || id || '" value="' || value || '">
