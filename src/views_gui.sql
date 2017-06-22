@@ -67,6 +67,9 @@ PROCEDURE top_menu(active varchar2) IS BEGIN
     ADAM_GUI.nav_link('ADAM_ORDER', 'home', 'Zamówienia', active);
     ADAM_GUI.nav_link('ADAM_GUEST', 'home', 'Goście', active);
     ADAM_GUI.nav_link('ADAM_PAYMENT_FORM', 'home', 'Formy płatności', active);
+    IF ADAM_USER.get_user_id() < 1 THEN
+        ADAM_GUI.nav_link('ADAM_USER', 'login_form', 'Logowanie', active);
+    END IF;
     ADAM_GUI.nav_link('ADAM_PAYMENT', 'home', 'Płatności', active);
     htp.print('</ul>
         </nav>
@@ -130,10 +133,9 @@ END warning;
 
 PROCEDURE two_column(col1 varchar2, col2 varchar2, class varchar2) IS BEGIN
     htp.print('<tr');
-    -- TODO: Fix condition
-    -- IF class <> '' THEN
+    IF NVL(class,'x') = 'x' THEN
         htp.print(' class="' || class || '"');
-    -- END IF;
+    END IF;
     htp.print('><td>' || col1 || '</td><td>' || col2 || '</td></tr>');
 END two_column;
 

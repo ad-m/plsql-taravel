@@ -27,7 +27,6 @@ CREATE INDEX country_idx_1
 on country 
 (name ASC)
 ;
-
 -- Table: guest
 CREATE TABLE guest (
     id integer  NOT NULL,
@@ -109,7 +108,7 @@ CREATE TABLE "user" (
     username varchar2(25)  NOT NULL,
     password varchar2(64)  NOT NULL,
     email varchar2(100)  NOT NULL,
-    address_id integer  NOT NULL,
+    address_id integer,
     admin integer  NOT NULL,
     CONSTRAINT user_pk PRIMARY KEY (id)
 ) ;

@@ -7,3 +7,4 @@ INSERT INTO location VALUES (2, 'Warszawa', 1);
 INSERT INTO location VALUES (3, 'Berlin', 2);
 INSERT INTO location VALUES (4, 'Madryt', 3);
 
+INSERT INTO "user" VALUES (0,'admin','pass','admin@example.com',NULL, 1);
