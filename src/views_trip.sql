@@ -10,18 +10,20 @@ PROCEDURE create_form;
 PROCEDURE create_sql(base_price_v integer,
                         description_v varchar2,
                         main_image_v varchar2,
+                        departure_date_v_s varchar2,
                         name_v varchar2,
                         space_v integer,
                         location_id_v integer);
 PROCEDURE update_form(id_v number);
 PROCEDURE update_sql (id_v number,
-                    base_price_v number,
-                    description_v varchar2,
-                    main_image_v varchar2,
-                    name_v varchar2,
-                    space_v number,
-                    location_id_v number,
-                    active_v in number default 0);
+                      base_price_v number,
+                      description_v varchar2,
+                      main_image_v varchar2,
+                      departure_date_v_s varchar2,
+                      name_v varchar2,
+                      space_v number,
+                      location_id_v number,
+                      active_v in number default 0);
 PROCEDURE delete_form (id_v number);
 PROCEDURE delete_sql (id_v number);
 
@@ -57,7 +59,7 @@ PROCEDURE list(page number) IS BEGIN
         <div class="card-block">
             <p class="card-text">'|| dane.description || '</p>');
         IF dane.active > 0 THEN 
-            htp.print('<a href="ADAM_ORDER.create_form?trip_id='|| dane.id || '" class="btn btn-primary">Kup za '|| dane.base_price || ' / osoba</a>');
+            htp.print('<a href="ADAM_ORDER.create_form?trip_id_v='|| dane.id || '" class="btn btn-primary">Kup za '|| dane.base_price || ' / osoba</a>');
         END IF;
         htp.print('<a href="ADAM_TRIP.detail?id_v=' || dane.id || '" class="btn btn-secondary">Szczegóły</a>
         </div>
@@ -66,6 +68,8 @@ PROCEDURE list(page number) IS BEGIN
     END LOOP;
     htp.print('</div>');
     ADAM_GUI.footer;
+    exception when others then
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
 END list;
 
 PROCEDURE search(keyword varchar2) IS BEGIN
@@ -86,7 +90,7 @@ PROCEDURE search(keyword varchar2) IS BEGIN
         <div class="card-block">
             <p class="card-text">'|| dane.description || '</p>');
         IF dane.active > 0 THEN 
-            htp.print('<a href="' || ADAM_GUI.url('ADAM_ORDER.create_form?trip_id=' || dane.id) || '" class="btn btn-primary">Kup za '|| dane.base_price || ' / osoba</a>');
+            htp.print('<a href="' || ADAM_GUI.url('ADAM_ORDER.create_form?trip_id_v=' || dane.id) || '" class="btn btn-primary">Kup za '|| dane.base_price || ' / osoba</a>');
         END IF;
         htp.print('<a href="' || ADAM_GUI.url('ADAM_TRIP.detail?id_v=' || dane.id ) || '" class="btn btn-secondary">Szczegóły</a>
         </div>
@@ -111,12 +115,13 @@ PROCEDURE detail(id_v number) IS
     SELECT COUNT(id) INTO order_count FROM "order" WHERE trip_id=id_v;
     ADAM_GUI.button_group('ADAM_TRIP.update_form?id_v=' || id_v, 'Aktualizuj',
                           'ADAM_TRIp.delete_form?id_v=' || id_v, 'Usuń');
-    htp.print('<a href="ADAM_ORDER.create_form?trip_id=' || trip_v.id || '" class="btn btn-secondary">Zamów</a>');
+    htp.print('<a href="ADAM_ORDER.create_form?trip_id_v=' || trip_v.id || '" class="btn btn-secondary">Zamów</a>');
     htp.tableOpen('class="table"');
     ADAM_GUI.two_column('Nazwa', trip_v.name);
     ADAM_GUI.two_column('Cena podstawowa', trip_v.base_price);
     ADAM_GUI.two_column('Miejsca', trip_v.space);
     ADAM_GUI.two_column('Opis', trip_v.description);
+    ADAM_GUI.two_column('Data wyjazdu', trip_v.departure_date);
     ADAM_GUI.two_column('Obraz', '<img src="' || trip_v.main_image || '" height="100px"></img>');
     ADAM_GUI.two_column('Lokalizacja', location_v.name);
     ADAM_GUI.two_column('Kraj', country_v.name);
@@ -131,14 +136,15 @@ PROCEDURE detail(id_v number) IS
     ADAM_GUI.footer;
 END detail; 
 
-PROCEDURE create_form IS BEGIN 
-    ADAM_GUI.header('ADAM_TRIP');
+PROCEDURE create_form IS 
+    BEGIN 
     htp.print('<form action="' || ADAM_GUI.url('ADAM_TRIP.create_sql') || '" method="GET">');
-    ADAM_GUI.form_input_clean('name_v', 'text', 'Nazwa', 'name_v');
-    ADAM_GUI.form_input_clean('base_price_v', 'text', 'Cena podstawowa', 'base_price_v');
-    ADAM_GUI.form_input_clean('space_v','number', 'Liczba miejsc', 'space_v');
+    ADAM_GUI.form_input('name_v', 'text', 'Nazwa', 'name_v');
+    ADAM_GUI.form_input('base_price_v', 'text', 'Cena podstawowa', 'base_price_v');
+    ADAM_GUI.form_input('space_v','number', 'Liczba miejsc', 'space_v');
     ADAM_GUI.form_textarea_clean('description', 'Opis', 'description_v');
-    ADAM_GUI.form_input_clean('main_image_v','url', 'Obraz (URL)', 'main_image_v');
+    ADAM_GUI.form_input('main_image_v','url', 'Obraz (URL)', 'main_image_v');
+    ADAM_GUI.form_input('departure_date_v_s','date', 'Data wyjazdu', 'departure_date_v_s', '', '2017-06-22');
     ADAM_LOCATION.form_select('location_id', 'Lokalizacja', 'location_id_v', NULL);
     ADAM_GUI.form_submit('Dodaj wycieczke');
     htp.print('</form>');
@@ -148,12 +154,18 @@ END create_form;
 PROCEDURE create_sql(base_price_v integer,
                         description_v varchar2,
                         main_image_v varchar2,
+                        departure_date_v_s varchar2,
                         name_v varchar2,
                         space_v integer,
-                        location_id_v integer) IS BEGIN 
+                        location_id_v integer) IS 
+    invalid_format EXCEPTION;
+    PRAGMA EXCEPTION_INIT(invalid_format, -1830);
+    null_invalid EXCEPTION;
+    PRAGMA EXCEPTION_INIT(null_invalid, -1400);
+    BEGIN 
     ADAM_GUI.header('ADAM_TRIP');
     BEGIN
-        INSERT INTO trip VALUES (0, base_price_v, description_v, main_image_v, name_v, space_v, location_id_v, sysdate, sysdate, 1);
+        INSERT INTO trip VALUES (0, base_price_v, description_v, main_image_v, name_v, space_v, location_id_v, sysdate, sysdate, 1, TO_DATE(departure_date_v_s,'yyyy/mm/dd'));
         ADAM_GUI.success('Well done!', 'Dane zostały pomyślnie zapisane!');
         EXCEPTION
             when NO_DATA_FOUND then
@@ -162,14 +174,14 @@ PROCEDURE create_sql(base_price_v integer,
                 ADAM_GUI.danger('Oh no!', 'Blad bloku procedury');
             WHEN STORAGE_ERROR THEN
                 ADAM_GUI.danger('Oh no!', 'Blad pamieci');
-            when INVALID_NUMBER then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when invalid_format then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc daty. Weź to napraw!'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
+            when null_invalid then
+                ADAM_GUI.danger('Oh no!', 'Wypelnij wszystkie wymagane pola, proszę!');
             when others then
-                ADAM_GUI.danger('Oh no!', 'Wystapil blad');
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
     ADAM_GUI.footer;
 END create_sql;
@@ -190,6 +202,7 @@ PROCEDURE update_form(id_v number) IS
     ADAM_GUI.form_input('main_image_v','url', 'Obraz (URL)', 'main_image_v', trip_v.main_image);
     ADAM_LOCATION.form_select('location_id', 'Lokalizacja', 'location_id_v', trip_v.location_id);
     ADAM_GUI.form_checkbox('active_v', 'Aktywne?', 'active_v', 1, trip_v.active);
+    ADAM_GUI.form_input('departure_date_v_s','date', 'Data wyjazdu', 'departure_date_v_s', trip_v.departure_date, '2017-06-22');
     -- ADAM_COUNTRY.form_select('country_id_v', 'Kraj', 'country_id_v', trip_v.location_id);
     ADAM_GUI.form_submit('Aktualizuj');
     htp.print('</form>');
@@ -207,24 +220,30 @@ PROCEDURE update_form(id_v number) IS
             when DUP_VAL_ON_INDEX then
                 ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
-                ADAM_GUI.danger('Oh no!', 'Wystapil blad');
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
     ADAM_GUI.footer;
 END update_form; 
 
 PROCEDURE update_sql (id_v number,
-                    base_price_v number,
-                    description_v varchar2,
-                    main_image_v varchar2,
-                    name_v varchar2,
-                    space_v number,
-                    location_id_v number,
-                    active_v in number default 0) IS BEGIN
-    NULL; 
+                      base_price_v number,
+                      description_v varchar2,
+                      main_image_v varchar2,
+                      departure_date_v_s varchar2,
+                      name_v varchar2,
+                      space_v number,
+                      location_id_v number,
+                      active_v in number default 0) IS 
+    invalid_format EXCEPTION;
+    PRAGMA EXCEPTION_INIT(invalid_format, -1830);
+    null_invalid EXCEPTION;
+    PRAGMA EXCEPTION_INIT(null_invalid, -1400);
+
+    BEGIN
     ADAM_GUI.header('ADAM_TRIP');
     BEGIN
         NULL;
-        UPDATE trip SET base_price=base_price_v,description=description_v,main_image=main_image_v,name=name_v,space=space_v, location_id=location_id_v, modified_on=sysdate, active=active_v WHERE id=id_v;
+        UPDATE trip SET base_price=base_price_v,description=description_v,main_image=main_image_v,name=name_v,space=space_v, location_id=location_id_v, modified_on=sysdate, active=active_v,departure_date=TO_DATE(departure_date_v_s,'yyyy/mm/dd') WHERE id=id_v;
         ADAM_GUI.success('Well done!', 'Dane zostały pomyślnie zaktualizowane!');
         EXCEPTION
             when NO_DATA_FOUND then
@@ -233,14 +252,14 @@ PROCEDURE update_sql (id_v number,
                 ADAM_GUI.danger('Oh no!', 'Blad bloku procedury');
             WHEN STORAGE_ERROR THEN
                 ADAM_GUI.danger('Oh no!', 'Blad pamieci');
-            when INVALID_NUMBER then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when invalid_format then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc daty. Weź to napraw!'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
+            when null_invalid then
+                ADAM_GUI.danger('Oh no!', 'Wypelnij wszystkie wymagane pola, proszę!');
             when others then
-                ADAM_GUI.danger('Oh no!', 'Wystapil blad');
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
     ADAM_GUI.footer;
 END update_sql;

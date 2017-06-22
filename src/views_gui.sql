@@ -7,8 +7,9 @@ PROCEDURE footer;
 FUNCTION url(postfix varchar2) RETURN VARCHAR2;
 PROCEDURE top_menu(active varchar2);
 PROCEDURE button(prefix varchar2, txt varchar2);
-PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null);
+PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null, placeholder varchar2 default null);
 PROCEDURE form_input_clean(id varchar2, type varchar2, label varchar2, name varchar2);
+PROCEDURE form_input_hidden(name varchar2, value varchar2 default null);
 PROCEDURE form_textarea(id varchar2, label varchar2, name varchar2, content varchar2);
 PROCEDURE form_textarea_clean(id varchar2, label varchar2, name varchar2);
 PROCEDURE form_submit(label varchar2);
@@ -60,7 +61,7 @@ PROCEDURE top_menu(active varchar2) IS BEGIN
     htp.print('<div class="container">');
     htp.print('<div class="header clearfix">
         <nav>
-          <ul class="nav nav-pills">');
+          <ul class="nav nav-pills float-right">');
     ADAM_GUI.nav_link('ADAM_COUNTRY', 'home', 'Kraje', active);
     ADAM_GUI.nav_link('ADAM_LOCATION', 'home', 'Lokalizacje', active);
     ADAM_GUI.nav_link('ADAM_TRIP', 'home', 'Wycieczki', active);
@@ -94,12 +95,20 @@ PROCEDURE button(prefix varchar2, txt varchar2) IS BEGIN
     htp.print('<a class="btn btn-primary" href="' || ADAM_GUI.url(prefix) || '">' || txt || '</a>');
 END button;
 
-PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null) IS BEGIN
+PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null, placeholder varchar2 default null) IS BEGIN
     htp.print('<div class="form-group">
         <label for="' || id || '">' || label || '</label>
-        <input type="' || type || '" name="' || name || '" class="form-control" id="' || id || '" value="' || value || '">
+        <input type="' || type || '" name="' || name || '" class="form-control" id="' || id || '" value="' || value || '"');
+    IF NVL('placeholder', 'X') != 'X' THEN
+        htp.print(' placeholder="' || placeholder || '" ');
+    END IF;
+    htp.print('>
     </div>');
 END form_input;
+
+PROCEDURE form_input_hidden(name varchar2, value varchar2 default null) IS BEGIN
+    htp.print('<input type="hidden" name="' || name || '" value="' || value || '">');
+END form_input_hidden;
 
 PROCEDURE form_input_clean(id varchar2, type varchar2, label varchar2, name varchar2) IS BEGIN
     ADAM_GUI.form_input(id, type, label, name, '');
