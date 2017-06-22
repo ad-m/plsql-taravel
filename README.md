@@ -1,7 +1,9 @@
 ## Taravel
 
 Realizacja bazy danych on-line dla systemu rejestracji wycieczek turystycznych projektu pracy zaliczeniowej pisanej w Instytucie Informatyki pod kierunkiem mgr Zbigniewa Młynarskiego.
+
 Projekt został zaprojektowany jako podstawa dla systemu biura podróży. Zapewnia możliwość rejestracji oferty, a także oferty i stanu dostępności oferty. 
+
 Należy podkreślić, że przeznaczeniem systemu nie jest obsługa zamówień złożonych on-line, stąd nie został wprowadzony mechanizm roli.
 
 ## Technologia
@@ -13,9 +15,9 @@ Należy podkreślić, że z powodu zależności projektu konieczne jest wykorzys
 
 Projekt wykorzystuje standardowe mechanizmy budowania oparte na ``Makefile``. W celu zbudowania projektu należy wykonać ``make build``. Wówczas stają się dostępne są trzy pliki:
 
-* build/db.sql - zapewnia  strukturę bazy danych i dane zgromadzone w aplikacji
-* build/web.sql - zapewnia strukturę interfejsu webowego aplikacji.
-* build/project.sql - skondensowane w/w.
+* ``build/db.sql`` - zapewnia  strukturę bazy danych i dane zgromadzone w aplikacji
+* ``build/web.sql`` - zapewnia strukturę interfejsu webowego aplikacji.
+* ``build/project.sql`` - skondensowane w/w.
 
 ## Uwagi
 
