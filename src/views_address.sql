@@ -229,7 +229,7 @@ PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected numbe
     <label for="' || id || '">' || label || '</label>
     <select name="' || name || '" class="form-control" id="' || id || '">');
   FOR dane IN (SELECT address.* FROM address) LOOP
-      ADAM_GUI.form_option(dane.id, dane.name ||' (' || dane.order_name || ')',  selected);
+      ADAM_GUI.form_option(dane.id, dane.name ||' (' || dane.city || ')',  selected);
   END LOOP;
   htp.print('</select>
   </div>');
@@ -244,34 +244,34 @@ END delete_form;
 PROCEDURE delete_sql(id_v number) IS 
     my_integration_error EXCEPTION;
     PRAGMA EXCEPTION_INIT (my_integration_error, -20101);
-    count_trip number;
+    count_order number;
     address_name address.name%TYPE;
 BEGIN
     NULL;
-    -- ADAM_GUI.header('ADAM_ADDRESS');
-    -- BEGIN
-    --     SELECT COUNT(id) INTO count_trip FROM trip WHERE address_id = id_v;
-    --     IF count_trip > 0 THEN
-    --         raise_application_error(-20101, 'Naruszenie integralności');
-    --     END IF;
-    --     SELECT name INTO address_name FROM address WHERE id = id_v;
-    --     DELETE FROM address WHERE id = id_v;
-    --     ADAM_GUI.success('Well done!', 'Pomyslnie usunieto "' || address_name || '".');
-    --     EXCEPTION
-    --         when my_integration_error then
-    --             ADAM_GUI.danger('Oh no!', 'Naruszenie integralności');
-    --         when NO_DATA_FOUND then
-    --             ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
-    --         WHEN STORAGE_ERROR THEN
-    --             ADAM_GUI.danger('Oh no!', 'Blad pamieci');
-    --         when INVALID_NUMBER then
-    --             ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
-    --         when VALUE_ERROR then
-    --             ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych');
-    --         when others then
-    --             ADAM_GUI.danger(SQLCODE, sqlerrm);
-    -- END;
-    -- ADAM_GUI.footer;
+    ADAM_GUI.header('ADAM_ADDRESS');
+    BEGIN
+        SELECT COUNT(id) INTO count_order FROM "order" WHERE address_id = id_v;
+        IF count_order > 0 THEN
+            raise_application_error(-20101, 'Naruszenie integralności');
+        END IF;
+        SELECT name INTO address_name FROM address WHERE id = id_v;
+        DELETE FROM address WHERE id = id_v;
+        ADAM_GUI.success('Well done!', 'Pomyslnie usunieto "' || address_name || '".');
+        EXCEPTION
+            when my_integration_error then
+                ADAM_GUI.danger('Oh no!', 'Naruszenie integralności');
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+            WHEN STORAGE_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad pamieci');
+            when INVALID_NUMBER then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when VALUE_ERROR then
+                ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych');
+            when others then
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
+    END;
+    ADAM_GUI.footer;
 END delete_sql;
 
 END ADAM_ADDRESS;

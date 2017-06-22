@@ -111,6 +111,7 @@ PROCEDURE detail(id_v number) IS
     SELECT COUNT(id) INTO order_count FROM "order" WHERE trip_id=id_v;
     ADAM_GUI.button_group('ADAM_TRIP.update_form?id_v=' || id_v, 'Aktualizuj',
                           'ADAM_TRIp.delete_form?id_v=' || id_v, 'Usuń');
+    htp.print('<a href="ADAM_ORDER.create_form?trip_id=' || trip_v.id || '" class="btn btn-secondary">Zamów</a>');
     htp.tableOpen('class="table"');
     ADAM_GUI.two_column('Nazwa', trip_v.name);
     ADAM_GUI.two_column('Cena podstawowa', trip_v.base_price);
