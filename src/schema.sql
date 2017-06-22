@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2017-06-15 19:05:15.779
+-- Last modification date: 2017-06-22 06:26:57.327
 
 -- tables
 -- Table: address
@@ -27,6 +27,7 @@ CREATE INDEX country_idx_1
 on country 
 (name ASC)
 ;
+
 -- Table: guest
 CREATE TABLE guest (
     id integer  NOT NULL,
@@ -52,7 +53,6 @@ on location
 -- Table: order
 CREATE TABLE "order" (
     id integer  NOT NULL,
-    "date" date  NOT NULL,
     created date  NOT NULL,
     note varchar2(255)  NOT NULL,
     unit_price integer  NOT NULL,
@@ -99,6 +99,7 @@ CREATE TABLE trip (
     created_on date  NOT NULL,
     modified_on date  NOT NULL,
     active smallint  NOT NULL,
+    departure_date date  NOT NULL,
     CONSTRAINT trip_pk PRIMARY KEY (id)
 ) ;
 
@@ -108,7 +109,7 @@ CREATE TABLE "user" (
     username varchar2(25)  NOT NULL,
     password varchar2(64)  NOT NULL,
     email varchar2(100)  NOT NULL,
-    address_id integer,
+    address_id integer  NULL,
     admin integer  NOT NULL,
     CONSTRAINT user_pk PRIMARY KEY (id)
 ) ;
