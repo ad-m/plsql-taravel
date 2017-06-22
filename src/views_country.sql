@@ -90,8 +90,6 @@ PROCEDURE create_sql (name_v varchar2, continent_v number) IS BEGIN
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
                 ADAM_GUI.danger('Oh no!', 'Wystapil blad');
     END;
@@ -135,8 +133,6 @@ PROCEDURE update_form(id_v number) IS
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
                 ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
@@ -159,8 +155,6 @@ PROCEDURE update_sql (id_v number, name_v varchar2, continent_v number) IS BEGIN
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
                 ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;

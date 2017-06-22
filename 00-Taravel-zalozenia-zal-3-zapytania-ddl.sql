@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2017-06-22 06:26:57.327
+-- Last modification date: 2017-04-28 07:25:12.296
 
 -- tables
 -- Table: address
@@ -11,7 +11,6 @@ CREATE TABLE address (
     street varchar2(250)  NOT NULL,
     street_number varchar2(10)  NOT NULL,
     taxpayer_id varchar2(15)  NOT NULL,
-    user_id integer  NOT NULL,
     CONSTRAINT address_pk PRIMARY KEY (id)
 ) ;
 
@@ -53,6 +52,7 @@ on location
 -- Table: order
 CREATE TABLE "order" (
     id integer  NOT NULL,
+    "date" date  NOT NULL,
     created date  NOT NULL,
     note varchar2(255)  NOT NULL,
     unit_price integer  NOT NULL,
@@ -77,16 +77,6 @@ CREATE TABLE payment_form (
     CONSTRAINT payment_form_pk PRIMARY KEY (id)
 ) ;
 
--- Table: sessions
-CREATE TABLE sessions (
-    id integer  NOT NULL,
-    key varchar2(100)  NOT NULL,
-    user_id integer  NOT NULL,
-    last_used date  NOT NULL,
-    CONSTRAINT session_key_1 UNIQUE (key),
-    CONSTRAINT sessions_pk PRIMARY KEY (id)
-) ;
-
 -- Table: trip
 CREATE TABLE trip (
     id integer  NOT NULL,
@@ -99,7 +89,6 @@ CREATE TABLE trip (
     created_on date  NOT NULL,
     modified_on date  NOT NULL,
     active smallint  NOT NULL,
-    departure_date date  NOT NULL,
     CONSTRAINT trip_pk PRIMARY KEY (id)
 ) ;
 
@@ -109,17 +98,12 @@ CREATE TABLE "user" (
     username varchar2(25)  NOT NULL,
     password varchar2(64)  NOT NULL,
     email varchar2(100)  NOT NULL,
-    address_id integer  NULL,
-    admin integer  NOT NULL,
+    address_id integer  NOT NULL,
+    payment_id integer  NOT NULL,
     CONSTRAINT user_pk PRIMARY KEY (id)
 ) ;
 
 -- foreign keys
--- Reference: address_user (table: address)
-ALTER TABLE address ADD CONSTRAINT address_user
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id);
-
 -- Reference: guest_order (table: guest)
 ALTER TABLE guest ADD CONSTRAINT guest_order
     FOREIGN KEY (order_id)
@@ -150,11 +134,6 @@ ALTER TABLE payment ADD CONSTRAINT payment_payment_form
     FOREIGN KEY (payment_form_id)
     REFERENCES payment_form (id);
 
--- Reference: sessions_user (table: sessions)
-ALTER TABLE sessions ADD CONSTRAINT sessions_user
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id);
-
 -- Reference: trip_location (table: trip)
 ALTER TABLE trip ADD CONSTRAINT trip_location
     FOREIGN KEY (location_id)
@@ -165,20 +144,10 @@ ALTER TABLE "user" ADD CONSTRAINT user_address
     FOREIGN KEY (address_id)
     REFERENCES address (id);
 
+-- Reference: user_payment (table: user)
+ALTER TABLE "user" ADD CONSTRAINT user_payment
+    FOREIGN KEY (payment_id)
+    REFERENCES payment (id);
+
 -- End of file.
 
-CREATE VIEW order_stat AS SELECT "order".id, "order".created, "order".note, "order".unit_price, "order".trip_id, trip.name AS trip_name, trip.location_id, location.name AS location_name, 
-COUNT(guest.id) AS guest_count, unit_price*COUNT(guest.id) AS total_price,
-address.id AS address_id, address.name AS address_name
-FROM "order"
-LEFT JOIN guest ON guest.order_id = "order".id
-INNER JOIN trip ON trip.id = "order".trip_id
-INNER JOIN location ON location.id = trip.location_id
-INNER JOIN address ON address.id = "order".address_id
-GROUP BY 
-"order".id, "order".created, "order".note, "order".unit_price, "order".trip_id, 
-trip.name, trip.location_id, 
-location.id, location.name,
-address.id, address.name;
-
-CREATE VIEW linked_trip AS SELECT departure_date,name, CONCAT('ADAM_TRIP.detail?id_v=', id) FROM trip;

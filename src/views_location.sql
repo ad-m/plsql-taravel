@@ -11,7 +11,7 @@ PROCEDURE update_form (id_v number);
 PROCEDURE update_sql (id_v number, name_v varchar2, country_id_v number);
 PROCEDURE delete_form(id_v number);
 PROCEDURE delete_sql(id_v number);
-PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected number);
+PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected number  default NULL);
 
 END ADAM_LOCATION;
 /
@@ -87,8 +87,6 @@ PROCEDURE create_sql (name_v varchar2, country_id_v number) IS BEGIN
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
                 ADAM_GUI.danger('Oh no!', 'Wystapil blad');
     END;
@@ -150,7 +148,7 @@ PROCEDURE update_sql (id_v number, name_v varchar2, country_id_v number) IS BEGI
     ADAM_GUI.footer;
 END update_sql;
 
-PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected number) IS
+PROCEDURE form_select(id varchar2, label varchar2, name varchar2, selected number default NULL) IS
   BEGIN
   htp.print('<div class="form-group">
     <label for="' || id || '">' || label || '</label>

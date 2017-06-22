@@ -7,6 +7,8 @@ PROCEDURE footer;
 FUNCTION url(postfix varchar2) RETURN VARCHAR2;
 PROCEDURE top_menu(active varchar2);
 PROCEDURE button(prefix varchar2, txt varchar2);
+PROCEDURE url_link(postfix varchar2, content varchar2);
+FUNCTION url_link_t(postfix varchar2, content varchar2) RETURN VARCHAR2;
 PROCEDURE form_input(id varchar2, type varchar2, label varchar2, name varchar2, value varchar2 default null, placeholder varchar2 default null);
 PROCEDURE form_input_clean(id varchar2, type varchar2, label varchar2, name varchar2);
 PROCEDURE form_input_hidden(name varchar2, value varchar2 default null);
@@ -44,6 +46,15 @@ FUNCTION url(postfix varchar2) RETURN VARCHAR2 IS BEGIN
     return owa_util.get_owa_service_path || postfix;
 END url;
 
+PROCEDURE url_link(postfix varchar2, content varchar2) IS BEGIN 
+    htp.print('<a href="' || url(postfix) || '">' || content || '</a>');
+END url_link;
+
+FUNCTION url_link_t(postfix varchar2, content varchar2) RETURN VARCHAR2 IS BEGIN 
+    RETURN '<a href="' || url(postfix) || '">' || content || '</a>';
+END url_link_t;
+
+
 PROCEDURE nav_link(section varchar2, function varchar2, label varchar2, active varchar2) IS BEGIN
 htp.print('<li class="nav-item">');
 htp.print('<a class="nav-link');
@@ -65,13 +76,13 @@ PROCEDURE top_menu(active varchar2) IS BEGIN
     ADAM_GUI.nav_link('ADAM_COUNTRY', 'home', 'Kraje', active);
     ADAM_GUI.nav_link('ADAM_LOCATION', 'home', 'Lokalizacje', active);
     ADAM_GUI.nav_link('ADAM_TRIP', 'home', 'Wycieczki', active);
-    ADAM_GUI.nav_link('ADAM_ORDER', 'home', 'Zamówienia', active);
-    ADAM_GUI.nav_link('ADAM_GUEST', 'home', 'Goście', active);
-    ADAM_GUI.nav_link('ADAM_PAYMENT_FORM', 'home', 'Formy płatności', active);
-    ADAM_GUI.nav_link('ADAM_ADDRESS', 'home', 'Adresy', active);
-    IF ADAM_USER.get_user_id() < 1 THEN
+    IF ADAM_USER.get_user_id < 0 THEN
         ADAM_GUI.nav_link('ADAM_USER', 'login_form', 'Logowanie', active);
     ELSE
+        ADAM_GUI.nav_link('ADAM_ORDER', 'home', 'Zamówienia', active);
+        ADAM_GUI.nav_link('ADAM_GUEST', 'home', 'Goście', active);
+        -- ADAM_GUI.nav_link('ADAM_PAYMENT_FORM', 'home', 'Formy płatności', active);
+        ADAM_GUI.nav_link('ADAM_ADDRESS', 'home', 'Adresy', active);
         ADAM_GUI.nav_link('ADAM_USER', 'logout', 'Wyloguj ' || ADAM_USER.get_user_name(), active);
     END IF;
     ADAM_GUI.nav_link('ADAM_PAYMENT', 'home', 'Płatności', active);
@@ -79,6 +90,8 @@ PROCEDURE top_menu(active varchar2) IS BEGIN
         </nav>
         <h3 class="text-muted">Biuro podróży</h3>
       </div>');
+    EXCEPTION when others then
+            ADAM_GUI.danger(SQLCODE, sqlerrm);
 END top_menu;
 
 PROCEDURE footer IS BEGIN

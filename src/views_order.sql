@@ -29,7 +29,8 @@ PROCEDURE home IS BEGIN ADAM_ORDER.list(0); END home;
 
 PROCEDURE list(page number) IS BEGIN
     ADAM_GUI.header('ADAM_ORDER');
-    htp.tableOpen('class="table"');
+    htp.tableOpen('class="table stripped"');
+    htp.print('<thead>');
         htp.tableHeader('Wycieczka');
         htp.tableHeader('Data utworzenia');
         htp.tableHeader('Notatka');
@@ -37,6 +38,7 @@ PROCEDURE list(page number) IS BEGIN
         htp.tableHeader('Cena jednostkowa');
         htp.tableHeader('Adres');
         htp.tableHeader(' ');
+    htp.print('</thead>');
     FOR dane IN (SELECT "order".id, "order".created, "order".note, "order".unit_price, "order".trip_id, trip.name AS trip_name, trip.location_id, location.name AS location_name, 
 COUNT(guest.id) AS guest_count, unit_price*COUNT(guest.id) AS total_price,
 address.id AS address_id, address.name AS address_name
@@ -79,15 +81,21 @@ GROUP BY
 trip.name, trip.location_id, 
 location.id, location.name,
 address.id, address.name);
+    my_found_error EXCEPTION;
+    PRAGMA EXCEPTION_INIT (my_found_error, -20111);
     dane dane_c%ROWTYPE;
     BEGIN 
     ADAM_GUI.header('ADAM_ORDER');
     BEGIN
     OPEN dane_c;
     FETCH dane_c INTO dane;
+    if dane_c%notfound then
+        raise_application_error(-20111, 'Nie znaleziono danych');
+    end if;
     CLOSE dane_c;
     ADAM_GUI.button_group('ADAM_ORDER.update_form?id_v=' || id_v, 'Aktualizuj',
-                          'ADAM_TRIp.delete_form?id_v=' || id_v, 'Usuń');
+                          'ADAM_ORDER.delete_form?id_v=' || id_v, 'Usuń');
+        ADAM_GUI.button('ADAM_PAYMENT.create_form?order_id_v=' || id_v, 'Zarejestruj platnosc');
     htp.tableOpen('class="table"');
     ADAM_GUI.two_column('Wycieczka', '<a href="ADAM_TRIP.detail?id_v=' || dane.trip_id || '">' || dane.trip_name || '</a>');
     ADAM_GUI.two_column('Data utworzenia',dane.created);
@@ -103,15 +111,18 @@ address.id, address.name);
     htp.tableHeader('Cena');
     htp.print('</tr>');
     FOR uczestnik IN (SELECT * FROM guest WHERE order_id=dane.id) LOOP
-    ADAM_GUI.two_column(uczestnik.first_name || ' ' || uczestnik.second_name, dane.unit_price);
+    ADAM_GUI.two_column(ADAM_GUI.url_link_t('ADAM_GUEST.detail?id_v=' || uczestnik.id, uczestnik.first_name || ' ' || uczestnik.second_name), dane.unit_price);
     END LOOP;
     htp.print('<tr>');
-    -- 'ADAM_GUEST.create_form?order_id_v=' || dane.id, 'Dodaj goscia'
     htp.print('<td>'); ADAM_GUI.button('ADAM_GUEST.create_form?order_id_v=' || dane.id, 'Dodaj goscia'); htp.print('</td>');
     htp.print('<td>' || dane.total_price ||'</td>');
     htp.print('</tr>');
 
     htp.tableClose;
+    EXCEPTION when my_found_error then
+        ADAM_GUI.danger(SQLCODE, 'Nie znaleziono!');
+        when others then
+        ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
     ADAM_GUI.footer;
 END detail; 
@@ -123,7 +134,7 @@ PROCEDURE create_form (trip_id_v integer) IS
     ADAM_GUI.header('ADAM_ORDER');
     SELECT COUNT(id) INTO address_count FROM address WHERE user_id = ADAM_USER.get_user_id();
     IF address_count = 0 THEN
-        ADAM_GUI.warning('Jest problem!', 'Nie masz dodanych adresów. Przejdź do <a href="' || ADAM_GUI.url('ADAM_ADDRESS.create_form') || '">formularza dodawania adresu</a>');
+        ADAM_GUI.warning('Jest problem!', ADAM_USER.get_user_name || ' nie masz dodanych adresów. Przejdź do <a href="' || ADAM_GUI.url('ADAM_ADDRESS.create_form') || '">formularza dodawania adresu</a>');
     END IF;
     htp.print('<form action="' || ADAM_GUI.url('ADAM_ORDER.create_sql') || '" method="GET">');
     ADAM_GUI.form_input_hidden('trip_id_v', trip_id_v);
@@ -138,6 +149,9 @@ PROCEDURE create_sql(note_v varchar2 default null,
                      trip_id_v integer,
                      address_id_v integer) IS
     trip_v trip%ROWTYPE;
+    my_integration_error EXCEPTION;
+    PRAGMA EXCEPTION_INIT (my_integration_error, -02291);
+
     BEGIN 
     ADAM_GUI.header('ADAM_ORDER');
     BEGIN
@@ -145,6 +159,8 @@ PROCEDURE create_sql(note_v varchar2 default null,
         INSERT INTO "order" VALUES (0, sysdate, note_v, trip_v.base_price, trip_id_v, address_id_v);
         ADAM_GUI.success('Well done!', 'Dane zostały pomyślnie zapisane!');
         EXCEPTION
+            when my_integration_error then
+                ADAM_GUI.danger('Oh no!', 'Naruszono integralnosc kluczy obcych');
             when NO_DATA_FOUND then
                 ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
             WHEN PROGRAM_ERROR THEN
@@ -155,10 +171,8 @@ PROCEDURE create_sql(note_v varchar2 default null,
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
-                ADAM_GUI.danger('Oh no!', 'Wystapil blad');
+                ADAM_GUI.danger('Oh no!', 'Wystapil blad' || sqlerrm);
     END;
     ADAM_GUI.footer;
 END create_sql;
@@ -172,14 +186,9 @@ PROCEDURE update_form(id_v number) IS
     SELECT * INTO order_v FROM "order" WHERE id=id_v;
     htp.print('<form action="' || ADAM_GUI.url('ADAM_ORDER.update_sql') || '">');
     htp.formHidden('id_v', id_v, '');
-    -- ADAM_GUI.form_input('name_v', 'text', 'Nazwa', 'name_v',order_v.name);
-    -- ADAM_GUI.form_input('base_price_v', 'text', 'Cena podstawowa', 'base_price_v', order_v.base_price);
-    -- ADAM_GUI.form_input('space_v','number', 'Liczba miejsc', 'space_v', order_v.space);
-    -- ADAM_GUI.form_textarea('description', 'Opis', 'description_v', order_v.description);
-    -- ADAM_GUI.form_input('main_image_v','url', 'Obraz (URL)', 'main_image_v', order_v.main_image);
-    -- ADAM_LOCATION.form_select('location_id', 'Lokalizacja', 'location_id_v', order_v.location_id);
-    -- ADAM_GUI.form_checkbox('active_v', 'Aktywne?', 'active_v', 1, order_v.active);
-    -- ADAM_COUNTRY.form_select('country_id_v', 'Kraj', 'country_id_v', order_v.location_id);
+    ADAM_ADDRESS.form_select('address_id_v', 'Adres', 'address_id_v', NULL);
+    ADAM_GUI.form_textarea_clean('note_v', 'Notatka', 'note_v');
+    ADAM_ADDRESS.form_select('address_id_v', 'Adres', 'address_id_v', NULL);
     ADAM_GUI.form_submit('Aktualizuj');
     htp.print('</form>');
         EXCEPTION
@@ -193,8 +202,6 @@ PROCEDURE update_form(id_v number) IS
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
                 ADAM_GUI.danger('Oh no!', 'Wystapil blad');
     END;
@@ -222,8 +229,6 @@ PROCEDURE update_sql (id_v number,
                 ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
             when VALUE_ERROR then
                 ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-            when DUP_VAL_ON_INDEX then
-                ADAM_GUI.danger('Oh no!', 'Wprowadzone dane nie sa unikalne');
             when others then
                 ADAM_GUI.danger('Oh no!', 'Wystapil blad');
     END;
@@ -232,7 +237,10 @@ END update_sql;
 
 PROCEDURE delete_form(id_v number) IS 
 BEGIN 
-    ADAM_GUI.delete_form(id_v, 'ADAM_ORDER', 'name', 'order');
+    ADAM_GUI.delete_form(id_v, 'ADAM_ORDER', 'id', '"order"');
+    EXCEPTION when others then
+        ADAM_GUI.danger(SQLCODE, sqlerrm);
+
 END delete_form;
 
 PROCEDURE delete_sql(id_v number) IS 
@@ -244,26 +252,26 @@ BEGIN
     ADAM_GUI.header('ADAM_ORDER');
     BEGIN
         NULL;
-        -- SELECT COUNT(id) INTO count_guest FROM guest WHERE order_id = id_v;
-        -- IF count_guest > 0 THEN
-        --     raise_application_error(-20101, 'Naruszenie integralności');
-        -- END IF;
-        -- SELECT name INTO label FROM "order" WHERE id = id_v;
-        -- DELETE FROM "order" WHERE id = id_v;
-        -- ADAM_GUI.success('Well done!', 'Pomyslnie usunieto "' || label || '".');
-        -- EXCEPTION
-        --     when my_integration_error then
-        --         ADAM_GUI.danger('Oh no!', 'Naruszenie integralności');
-        --     when NO_DATA_FOUND then
-        --         ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
-        --     WHEN STORAGE_ERROR THEN
-        --         ADAM_GUI.danger('Oh no!', 'Blad pamieci');
-        --     when INVALID_NUMBER then
-        --         ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
-        --     when VALUE_ERROR then
-        --         ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych');
-        --     when others then
-        --         ADAM_GUI.danger(SQLCODE, sqlerrm);
+        SELECT COUNT(id) INTO count_guest FROM guest WHERE order_id = id_v;
+        IF count_guest > 0 THEN
+            raise_application_error(-20101, 'Naruszenie integralności');
+        END IF;
+        SELECT id INTO label FROM "order" WHERE id = id_v;
+        DELETE FROM "order" WHERE id = id_v;
+        ADAM_GUI.success('Well done!', 'Pomyslnie usunieto "' || label || '".');
+        EXCEPTION
+            when my_integration_error then
+                ADAM_GUI.danger('Oh no!', 'Naruszenie integralności');
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+            WHEN STORAGE_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad pamieci');
+            when INVALID_NUMBER then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when VALUE_ERROR then
+                ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych');
+            when others then
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
     END;
     ADAM_GUI.footer;
 END delete_sql;
