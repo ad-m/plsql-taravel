@@ -181,4 +181,4 @@ trip.name, trip.location_id,
 location.id, location.name,
 address.id, address.name;
 
-CREATE VIEW linked_trip AS SELECT departure_date,name, CONCAT('ADAM_TRIP.detail?id_v=', id) FROM trip;
+CREATE VIEW linked_trip AS SELECT departure_date,name, CONCAT('ADAM_TRIP.detail?id_v=', id) AS href FROM trip;

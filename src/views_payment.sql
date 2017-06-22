@@ -110,51 +110,51 @@ PROCEDURE update_form(id_v number) IS
     payment_v payment%ROWTYPE;
     BEGIN 
     ADAM_GUI.header('ADAM_PAYMENT');
-    -- BEGIN
-    -- NULL;
-    -- SELECT * INTO payment_v FROM payment WHERE id=id_v;
-    -- htp.print('<form action="' || ADAM_GUI.url('ADAM_PAYMENT.update_sql') || '">');
-    -- htp.formHidden('id_v', id_v, '');
-    -- ADAM_PAYMENT_FORM.form_select('payment_form_id_v', 'Platnosc', 'payment_form_id_v', payment_v.payment_form_id);
-    -- ADAM_ORDER.form_select('order_id_v', 'Zamowienie', 'order_id_v', payment_v.order_id);
-    -- ADAM_GUI.form_submit('Zaktualizuj platnosc');
-    -- htp.print('</form>');
-    --     EXCEPTION
-    --         when NO_DATA_FOUND then
-    --             ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
-    --         WHEN PROGRAM_ERROR THEN
-    --             ADAM_GUI.danger('Oh no!', 'Blad bloku procedury');
-    --         WHEN STORAGE_ERROR THEN
-    --             ADAM_GUI.danger('Oh no!', 'Blad pamieci');
-    --         when INVALID_NUMBER then
-    --             ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
-    --         when VALUE_ERROR then
-    --             ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-    --         when others then
-    --             ADAM_GUI.danger(SQLCODE, sqlerrm);
-    -- END;
+    BEGIN
+    NULL;
+    SELECT * INTO payment_v FROM payment WHERE id=id_v;
+    htp.print('<form action="' || ADAM_GUI.url('ADAM_PAYMENT.update_sql') || '">');
+    htp.formHidden('id_v', id_v, '');
+    ADAM_PAYMENT_FORM.form_select('payment_form_id_v', 'Platnosc', 'payment_form_id_v', payment_v.payment_form_id);
+    ADAM_ORDER.form_select('order_id_v', 'Zamowienie', 'order_id_v', payment_v.order_id);
+    ADAM_GUI.form_submit('Zaktualizuj platnosc');
+    htp.print('</form>');
+        EXCEPTION
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+            WHEN PROGRAM_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad bloku procedury');
+            WHEN STORAGE_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad pamieci');
+            when INVALID_NUMBER then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when VALUE_ERROR then
+                ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
+            when others then
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
+    END;
     ADAM_GUI.footer;
 END update_form; 
 
 PROCEDURE update_sql (id_v number, order_id_v varchar2, payment_form_id_v number) IS BEGIN 
     ADAM_GUI.header('ADAM_PAYMENT');
-    -- BEGIN
-    --     UPDATE payment SET order_id=order_id_v, payment_form_id=payment_form_id_v WHERE id=id_v;
-    --     ADAM_GUI.success('Well done!', 'Dane zostały pomyślnie zaktualizowane!');
-    --     EXCEPTION
-    --         when NO_DATA_FOUND then
-    --             ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
-    --         WHEN PROGRAM_ERROR THEN
-    --             ADAM_GUI.danger('Oh no!', 'Blad bloku procedury');
-    --         WHEN STORAGE_ERROR THEN
-    --             ADAM_GUI.danger('Oh no!', 'Blad pamieci');
-    --         when INVALID_NUMBER then
-    --             ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
-    --         when VALUE_ERROR then
-    --             ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
-    --         when others then
-    --             ADAM_GUI.danger(SQLCODE, sqlerrm);
-    -- END;
+    BEGIN
+        UPDATE payment SET order_id=order_id_v, payment_form_id=payment_form_id_v WHERE id=id_v;
+        ADAM_GUI.success('Well done!', 'Dane zostały pomyślnie zaktualizowane!');
+        EXCEPTION
+            when NO_DATA_FOUND then
+                ADAM_GUI.danger('Oh no!', 'Nie znaleziono danych');
+            WHEN PROGRAM_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad bloku procedury');
+            WHEN STORAGE_ERROR THEN
+                ADAM_GUI.danger('Oh no!', 'Blad pamieci');
+            when INVALID_NUMBER then
+                ADAM_GUI.danger('Oh no!', 'Wprowadzono niepoprawna wartosc'); 
+            when VALUE_ERROR then
+                ADAM_GUI.danger('Oh no!', 'Blad konwersji typów danych'); 
+            when others then
+                ADAM_GUI.danger(SQLCODE, sqlerrm);
+    END;
     ADAM_GUI.footer;
 END update_sql;
 

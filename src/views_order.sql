@@ -117,8 +117,13 @@ address.id, address.name);
     htp.print('<td>'); ADAM_GUI.button('ADAM_GUEST.create_form?order_id_v=' || dane.id, 'Dodaj goscia'); htp.print('</td>');
     htp.print('<td>' || dane.total_price ||'</td>');
     htp.print('</tr>');
-
     htp.tableClose;
+    htp.print('<h2>Wykaz płatności</h2>');
+    htp.print('<ul  class="nav flex-column">');
+    FOR dane IN (SELECT * FROM payment) LOOP
+        htp.print('<li  class="nav-item"><a  class="nav-link" href="' || ADAM_GUI.url('ADAM_PAYMENT.detail?id_v=' || dane.id ) || '"> # ' || dane.order_id || '</a></li>');
+    END LOOP;
+    htp.print('</ul>');
     EXCEPTION when my_found_error then
         ADAM_GUI.danger(SQLCODE, 'Nie znaleziono!');
         when others then
