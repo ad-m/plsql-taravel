@@ -8,7 +8,7 @@ PROCEDURE detail(id_v number);
 PROCEDURE create_form;
 PROCEDURE create_sql (name_v varchar2);
 PROCEDURE update_form (id_v number);
-PROCEDURE update_sql (id_v number, name_v varchar2, active number default 0);
+PROCEDURE update_sql (id_v number, name_v varchar2, active_v varchar2 default 0);
 PROCEDURE delete_form (id_v number);
 PROCEDURE delete_sql (id_v number);
 PROCEDURE form_select (id varchar2, label varchar2, name varchar2, selected varchar2 default -1);
@@ -141,10 +141,10 @@ PROCEDURE update_form(id_v number) IS
     ADAM_GUI.footer;
 END update_form; 
 
-PROCEDURE update_sql (id_v number, name_v varchar2, active number default 0) IS BEGIN 
+PROCEDURE update_sql (id_v number, name_v varchar2, active_v varchar2 default 0) IS BEGIN 
     ADAM_GUI.header('ADAM_PAYMENT_FORM');
     BEGIN
-        UPDATE payment_form SET name=name_v, active=active WHERE id=id_v;
+        UPDATE payment_form SET name=name_v, active=active_v WHERE id=id_v;
         ADAM_GUI.success('Well done!', 'Dane zostały pomyślnie zaktualizowane!');
         EXCEPTION
             when NO_DATA_FOUND then
