@@ -20,7 +20,7 @@ Należy podkreślić, że z powodu zależności projektu konieczne jest wykorzys
 Projekt wykorzystuje standardowe mechanizmy budowania oparte na ``Makefile``. W celu zbudowania projektu należy wykonać ``make build``. Wówczas stają się dostępne są trzy pliki:
 
 * ``build/db.sql`` - zapewnia strukturę bazy danych i minimalne inicjalne dane dla aplikacji,
-* ``build/web.sql`` - zapewnia strukturę interfejsu webowego aplikacji,
+* ``build/web.sql`` - zapewnia strukturę interfejsu webowego aplikacji, ze względu na cykliczne odwołania może zachodzić konieczność kilkukrotnego wczytania tych instrukcji.
 * ``build/project.sql`` - skondensowane w/w.
 
 Domyślne dane logowania to "admin" i "pass". Wprowadzona rejestracja nie umożliwia zalogowanie na tak utworzono konto. Gromadzone jest hasło użytkownika, ale konieczne jest nadanie uprawnień logowania dla użytkownika przez administratora.
